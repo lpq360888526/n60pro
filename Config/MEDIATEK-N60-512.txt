@@ -1,0 +1,7 @@
+
+# 设备平台
+CONFIG_TARGET_mediatek=y
+CONFIG_TARGET_mediatek_filogic=y
+
+# 目标设备：Netcore N60 Pro
+CONFIG_TARGET_DEVICE_mediatek_filogic_DEVICE_netcore_n60-pro=y
