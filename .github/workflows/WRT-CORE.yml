@@ -139,6 +139,44 @@ jobs:
             sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$PROJECT_MIRRORS_FILE"
           fi
 
+      - name: Patch N60 Pro 512MB UBI
+        if: ${{ contains(inputs.WRT_CONFIG, 'N60-512') }}
+        run: |
+          cd ./wrt/
+
+          DTS="target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts"
+
+          if [ ! -f "$DTS" ]; then
+            echo "ERROR: N60 Pro DTS not found!"
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path("target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts")
+          s = p.read_text()
+
+          pattern = r'(label\s*=\s*"ubi";\s*reg\s*=\s*<0x0580000\s+)0x[0-9a-fA-F]+'
+
+          s2, count = re.subn(
+              pattern,
+              r'\g<1>0x1ea00000',
+              s,
+              count=1
+          )
+
+          if count != 1:
+              raise SystemExit("ERROR: UBI partition was not uniquely matched!")
+
+          p.write_text(s2)
+
+          print("N60 Pro UBI partition changed to 0x1ea00000")
+          PY
+
+          grep -A 3 'label = "ubi";' "$DTS"
+
       - name: Check Scripts
         run: |
           find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
